@@ -55,7 +55,7 @@ export default function LoginPage() {
           </span>
         </div>
         <h1 className="font-h1 text-h1 text-on-surface text-center mb-xl">
-          Islamic Academy Attendance
+          nurel islam ustaz
         </h1>
 
         {/* Error Message */}
