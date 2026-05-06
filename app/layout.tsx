@@ -1,5 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
+import { AuthProvider } from "@/context/authContext";
+import { DataProvider } from "@/context/dataContext";
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -10,6 +12,7 @@ const inter = Inter({
 export const metadata = {
   title: "Ustaz Dashboard - Islamic Academy",
   description: "Teacher portal for Islamic Academy",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -27,7 +30,11 @@ export default function RootLayout({
       </head>
       {/* Base styles mapped straight from the HTML */}
       <body className="bg-background text-on-surface font-body-md antialiased min-h-screen">
-        {children}
+        <AuthProvider>
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </AuthProvider>
       </body>
     </html>
   );

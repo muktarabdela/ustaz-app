@@ -1,29 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/authContext";
+import { useData } from "@/context/dataContext";
+import { studentService } from "@/lib/servies/studentService";
+import { attendanceService } from "@/lib/servies/attendanceService";
+import { classUstazService } from "@/lib/servies/classUstazService";
+import { StudentModel } from "@/models/Student";
+import { AttendanceModel, AttendanceStatus } from "@/models/Attendance";
+import { ClassModel } from "@/models/Class";
+import { toEthiopian } from "ethiopian-calendar-new";
 
-// 1. Generate 50 mock students dynamically to test pagination
 const ITEMS_PER_PAGE = 10;
-const generateMockStudents = () => {
-  return Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    initials: `${i + 1}`,
-    name: `Student Name ${i + 1}`,
-    status: null as string | null, // Unselected by default
-    avatarColor: [
-      "bg-secondary-container text-on-secondary-container",
-      "bg-tertiary-container text-on-tertiary-container",
-      "bg-surface-variant text-on-surface-variant",
-    ][i % 3], // Cycle through colors
-  }));
-};
 
-const initialStudents = generateMockStudents();
+interface StudentWithAttendance extends StudentModel {
+  status: AttendanceStatus | null;
+  initials: string;
+  avatarColor: string;
+}
 
 export default function TakeAttendancePage() {
-  const [students, setStudents] = useState(initialStudents);
+  const { user } = useAuth();
+  const { refreshData } = useData();
+  
+  const [students, setStudents] = useState<StudentWithAttendance[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedClass, setSelectedClass] = useState<ClassModel | null>(null);
+  const [ustazClasses, setUstazClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
 
   // Pagination Logic
   const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
@@ -31,12 +39,117 @@ export default function TakeAttendancePage() {
   const paginatedStudents = students.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   // Function to handle clicking attendance buttons
-  const updateStatus = (id: number, newStatus: string) => {
-    setStudents((prev) =>
-      prev.map((student) =>
+  const updateStatus = (id: string, newStatus: AttendanceStatus) => {
+    setStudents((prev: StudentWithAttendance[]) =>
+      prev.map((student: StudentWithAttendance) =>
         student.id === id ? { ...student, status: newStatus } : student
       )
     );
+  };
+
+  // Load ustaz classes and students
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Get classes for this ustaz
+        const classesData = await classUstazService.getByUstaz(user.id);
+        setUstazClasses(classesData);
+        
+        // Auto-select first class if available
+        if (classesData.length > 0 && classesData[0].classes) {
+          const firstClass = classesData[0].classes;
+          setSelectedClass(firstClass);
+          
+          // Get students for this class
+          const studentsData = await studentService.getByClass(firstClass.id);
+          
+          // Get today's attendance for these students
+          const todayAttendance = await attendanceService.getByDate(selectedDate, firstClass.id);
+          
+          // Transform students with attendance data
+          const studentsWithAttendance: StudentWithAttendance[] = studentsData.map((student, index) => {
+            const attendance = todayAttendance.find(a => a.student_id === student.id);
+            const avatarColors = [
+              "bg-secondary-container text-on-secondary-container",
+              "bg-tertiary-container text-on-tertiary-container", 
+              "bg-surface-variant text-on-surface-variant",
+            ];
+            
+            return {
+              ...student,
+              initials: student.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+              status: attendance?.status || null,
+              avatarColor: avatarColors[index % 3]
+            };
+          });
+          
+          setStudents(studentsWithAttendance);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id, selectedDate]);
+
+  // Update Ethiopian date when selected date changes
+  useEffect(() => {
+    const date = new Date(selectedDate);
+    const ethDate = toEthiopian(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    
+    const ethiopianMonths = [
+      'መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት',
+      'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜን'
+    ];
+    
+    const ethiopianWeekdays = [
+      'እኑድ', 'ሰኞ', 'ማክሰኞ', 'ረቡዕ', 'ሐሙስ', 'ዓርብ', 'ቅዳሜ'
+    ];
+    
+    const weekdayIndex = date.getDay();
+    const ethiopianWeekday = ethiopianWeekdays[weekdayIndex];
+    
+    setEthiopianDate({
+      day: ethDate.day,
+      month: ethiopianMonths[ethDate.month - 1],
+      year: ethDate.year,
+      weekday: ethiopianWeekday
+    });
+  }, [selectedDate]);
+
+  // Save attendance
+  const saveAttendance = async () => {
+    if (!selectedClass || !user?.id) return;
+    
+    try {
+      setSaving(true);
+      
+      const attendanceRecords = students
+        .filter(student => student.status !== null)
+        .map(student => ({
+          student_id: student.id,
+          class_id: selectedClass.id,
+          date: selectedDate,
+          status: student.status as AttendanceStatus,
+          recorded_by: user.id
+        }));
+      
+      if (attendanceRecords.length > 0) {
+        await attendanceService.upsertBulk(attendanceRecords);
+        await refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
 
@@ -44,6 +157,21 @@ export default function TakeAttendancePage() {
   // Calculate overall progress bar width
   const markedCount = students.filter((s) => s.status !== null).length;
   const progressPercent = (markedCount / students.length) * 100;
+
+  if (loading) {
+    return (
+      <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined text-6xl text-primary animate-spin">
+            hourglass_empty
+          </span>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Loading attendance data...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
@@ -58,7 +186,9 @@ export default function TakeAttendancePage() {
             arrow_back
           </span>
         </Link>
-        <h1 className="font-h2 text-h2 text-primary">Qaida (50 Students)</h1>
+        <h1 className="font-h2 text-h2 text-primary">
+          {selectedClass?.name || 'Loading...'} ({students.length} Students)
+        </h1>
         <button className="flex items-center justify-center p-sm rounded-full hover:bg-surface-container-low text-on-surface-variant transition-opacity duration-150">
           <span aria-hidden="true" className="material-symbols-outlined">
             more_vert
@@ -75,7 +205,7 @@ export default function TakeAttendancePage() {
             <div>
               <h2 className="font-h1 text-h1 text-on-surface">Take Attendance</h2>
               <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-                Record attendance for today's session.
+                {ethiopianDate ? `Record attendance for ${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
               </p>
             </div>
             <div className="bg-primary-container text-on-primary-container px-sm py-xs rounded-full flex items-center gap-xs">
@@ -96,9 +226,39 @@ export default function TakeAttendancePage() {
               <input
                 className="bg-transparent border-none focus:ring-0 w-full font-button text-button text-on-surface p-0 outline-none"
                 type="date"
-                defaultValue="2024-05-15"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
               />
+              {ethiopianDate && (
+                <span className="ml-auto font-label-caps text-label-caps text-primary bg-primary-container/20 px-2 py-1 rounded text-xs">
+                  {ethiopianDate.month} {ethiopianDate.day}, {ethiopianDate.year}
+                </span>
+              )}
             </div>
+            
+            {ustazClasses.length > 1 && (
+              <div className="flex items-center bg-surface-container-low rounded-lg p-sm border border-surface-variant focus-within:border-primary transition-colors">
+                <span className="material-symbols-outlined text-on-surface-variant mr-sm">
+                  class
+                </span>
+                <select
+                  className="bg-transparent border-none focus:ring-0 w-full font-button text-button text-on-surface p-0 outline-none"
+                  value={selectedClass?.id || ''}
+                  onChange={(e) => {
+                    const classData = ustazClasses.find(uc => uc.classes.id === e.target.value);
+                    if (classData) {
+                      setSelectedClass(classData.classes);
+                    }
+                  }}
+                >
+                  {ustazClasses.map((uc) => (
+                    <option key={uc.classes.id} value={uc.classes.id}>
+                      {uc.classes.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
           </div>
         </div>
@@ -126,7 +286,7 @@ export default function TakeAttendancePage() {
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-button text-button text-on-surface">
-                    {student.name}
+                    {student.full_name}
                   </h3>
                 </div>
               </div>
@@ -226,12 +386,19 @@ export default function TakeAttendancePage() {
       {/* Sticky Save Button Container */}
       <div className="fixed bottom-0 left-0 w-full bg-surface-container-lowest shadow-[0_-4px_15px_rgba(0,0,0,0.04)] px-container-padding py-md z-50 rounded-t-xl flex justify-center">
         <div className="w-full max-w-3xl">
-          <Link href="/success" className="block w-full">
-            <button className="w-full h-[48px] bg-primary text-on-primary font-button text-button rounded-lg flex items-center justify-center gap-sm transition-transform active:scale-95">
-              <span className="material-symbols-outlined">save</span>
-              Save Attendance ({markedCount}/{students.length})
-            </button>
-          </Link>
+          <button 
+            onClick={async () => {
+              await saveAttendance();
+              window.location.href = '/success';
+            }}
+            disabled={saving || loading || markedCount === 0}
+            className="w-full h-[48px] bg-primary text-on-primary font-button text-button rounded-lg flex items-center justify-center gap-sm transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined">
+              {saving ? 'hourglass_empty' : 'save'}
+            </span>
+            {saving ? 'Saving...' : `Save Attendance (${markedCount}/${students.length})`}
+          </button>
         </div>
       </div>
 

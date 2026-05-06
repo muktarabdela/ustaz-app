@@ -1,9 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/authContext";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const result = await login({
+        phone_number: phoneNumber,
+        password: password
+      });
+
+      if (result.success) {
+        router.push("/");
+      } else {
+        setError(result.message || "Login failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="bg-background min-h-screen flex items-center justify-center p-container-padding antialiased">
@@ -26,8 +58,15 @@ export default function LoginPage() {
           Islamic Academy Attendance
         </h1>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-error-container text-on-error-container p-sm rounded-lg text-sm font-body-md mb-lg">
+            {error}
+          </div>
+        )}
+
         {/* Form */}
-        <form action="/" className="flex flex-col gap-lg">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-lg">
           
           {/* Phone Input */}
           <div className="flex flex-col gap-xs">
@@ -43,7 +82,10 @@ export default function LoginPage() {
                 id="phone" 
                 placeholder="Enter your phone number" 
                 type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -62,12 +104,16 @@ export default function LoginPage() {
                 id="password" 
                 placeholder="Enter your password" 
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-md text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center h-full w-[24px]"
+                disabled={isLoading}
               >
                 <span className="material-symbols-outlined text-[20px]">
                   {showPassword ? "visibility_off" : "visibility"}
@@ -79,9 +125,14 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button 
             type="submit"
-            className="w-full h-[48px] mt-sm bg-primary text-on-primary font-button text-button rounded-lg flex items-center justify-center hover:bg-on-primary-fixed-variant transition-colors shadow-sm active:scale-95"
+            className="w-full h-[48px] mt-sm bg-primary text-on-primary font-button text-button rounded-lg flex items-center justify-center hover:bg-on-primary-fixed-variant transition-colors shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? (
+              <span className="material-symbols-outlined animate-spin">refresh</span>
+            ) : (
+              "Login"
+            )}
           </button>
 
         </form>
