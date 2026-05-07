@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/authContext";
 import { useData } from "@/context/dataContext";
 import { studentService } from "@/lib/servies/studentService";
 import { attendanceService } from "@/lib/servies/attendanceService";
-import { classUstazService } from "@/lib/servies/classUstazService";
+import { classService } from "@/lib/servies/classService";
 import { StudentModel } from "@/models/Student";
-import { AttendanceModel, AttendanceStatus } from "@/models/Attendance";
+import { AttendanceStatus } from "@/models/Attendance";
 import { ClassModel } from "@/models/Class";
 import { toEthiopian } from "ethiopian-calendar-new";
 
@@ -23,12 +24,13 @@ interface StudentWithAttendance extends StudentModel {
 export default function TakeAttendancePage() {
   const { user } = useAuth();
   const { refreshData } = useData();
-  
+  const searchParams = useSearchParams();
+  const classId = searchParams.get('classId');
+
   const [students, setStudents] = useState<StudentWithAttendance[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClass, setSelectedClass] = useState<ClassModel | null>(null);
-  const [ustazClasses, setUstazClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
@@ -48,52 +50,50 @@ export default function TakeAttendancePage() {
     );
   };
 
-  // Load ustaz classes and students
+  // Load class and students from URL classId
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.id) return;
-      
+      if (!classId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        
-        // Get classes for this ustaz
-        const classesData = await classUstazService.getByUstaz(user.id);
-        setUstazClasses(classesData);
-        
-        // Auto-select first class if available
-        if (classesData.length > 0 && classesData[0].classes) {
-          const firstClass = classesData[0].classes;
-          setSelectedClass(firstClass);
-          
-          // Get students for this class
-          const studentsData = await studentService.getByClass(firstClass.id);
-          
-          // Get today's attendance for these students
-          const todayAttendance = await attendanceService.getByDate(selectedDate, firstClass.id);
-          
-          // Check if we have existing attendance (update mode)
-          const hasExistingAttendance = todayAttendance.length > 0;
-          setIsUpdateMode(hasExistingAttendance);
-          
-          // Transform students with attendance data
-          const studentsWithAttendance: StudentWithAttendance[] = studentsData.map((student, index) => {
-            const attendance = todayAttendance.find(a => a.student_id === student.id);
-            const avatarColors = [
-              "bg-secondary-container text-on-secondary-container",
-              "bg-tertiary-container text-on-tertiary-container", 
-              "bg-surface-variant text-on-surface-variant",
-            ];
-            
-            return {
-              ...student,
-              initials: student.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-              status: attendance?.status || null,
-              avatarColor: avatarColors[index % 3]
-            };
-          });
-          
-          setStudents(studentsWithAttendance);
-        }
+        setCurrentPage(1);
+
+        // Get class info
+        const classData = await classService.getById(classId);
+        setSelectedClass(classData);
+
+        // Get students for this class
+        const studentsData = await studentService.getByClass(classId);
+
+        // Get today's attendance for these students
+        const todayAttendance = await attendanceService.getByDate(selectedDate, classId);
+
+        // Check if we have existing attendance (update mode)
+        const hasExistingAttendance = todayAttendance.length > 0;
+        setIsUpdateMode(hasExistingAttendance);
+
+        // Transform students with attendance data
+        const studentsWithAttendance: StudentWithAttendance[] = studentsData.map((student, index) => {
+          const attendance = todayAttendance.find(a => a.student_id === student.id);
+          const avatarColors = [
+            "bg-secondary-container text-on-secondary-container",
+            "bg-tertiary-container text-on-tertiary-container",
+            "bg-surface-variant text-on-surface-variant",
+          ];
+
+          return {
+            ...student,
+            initials: student.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            status: attendance?.status || null,
+            avatarColor: avatarColors[index % 3]
+          };
+        });
+
+        setStudents(studentsWithAttendance);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -102,7 +102,7 @@ export default function TakeAttendancePage() {
     };
 
     loadData();
-  }, [user?.id, selectedDate]);
+  }, [classId, selectedDate]);
 
   // Update Ethiopian date when selected date changes
   useEffect(() => {
@@ -174,6 +174,28 @@ export default function TakeAttendancePage() {
   // Calculate overall progress bar width
   const markedCount = students.filter((s) => s.status !== null).length;
   const progressPercent = (markedCount / students.length) * 100;
+
+  if (!classId) {
+    return (
+      <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased items-center justify-center px-container-padding">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="material-symbols-outlined text-6xl text-error">
+            error
+          </span>
+          <p className="font-h2 text-h2 text-on-surface">ክፍል አልተመረጠም</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            እባክዎ ከዳሽቦርድ ክፍል ይምረጡ
+          </p>
+          <Link
+            href="/"
+            className="mt-4 px-6 py-3 bg-primary text-on-primary font-button text-button rounded-lg hover:bg-surface-tint transition-colors"
+          >
+            ወደ ዳሽቦርድ ተመለስ
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -255,29 +277,6 @@ export default function TakeAttendancePage() {
               )}
             </div>
             
-            {ustazClasses.length > 1 && (
-              <div className="flex items-center bg-surface-container-low rounded-lg p-sm border border-surface-variant focus-within:border-primary transition-colors">
-                <span className="material-symbols-outlined text-on-surface-variant mr-sm">
-                  class
-                </span>
-                <select
-                  className="bg-transparent border-none focus:ring-0 w-full font-button text-button text-on-surface p-0 outline-none"
-                  value={selectedClass?.id || ''}
-                  onChange={(e) => {
-                    const classData = ustazClasses.find(uc => uc.classes.id === e.target.value);
-                    if (classData) {
-                      setSelectedClass(classData.classes);
-                    }
-                  }}
-                >
-                  {ustazClasses.map((uc) => (
-                    <option key={uc.classes.id} value={uc.classes.id}>
-                      {uc.classes.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
           </div>
         </div>

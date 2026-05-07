@@ -1,11 +1,13 @@
 import { supabase } from '@/lib/supabase';
 import { UstazModel } from '@/models/Ustaz';
+import bcrypt from 'bcryptjs';
 
 const TABLE_NAME = 'ustaz';
 
-// Helper function to hash password (simple implementation - consider using bcrypt in production)
+// Helper function to hash password using bcrypt
 const hashPassword = (password: string): string => {
-  return btoa(password); // Basic encoding for demo - replace with proper hashing in production
+  const salt = bcrypt.genSaltSync(10);
+  return bcrypt.hashSync(password, salt);
 };
 
 export interface CreateUstazPayload {
@@ -37,13 +39,12 @@ export interface LoginResponse {
 
 export const ustazService = {
   async create(payload: CreateUstazPayload): Promise<UstazModel> {
-    const { password, ...otherFields } = payload;
+ const { password, ...otherFields } = payload;
     
     const createPayload = {
       ...otherFields,
       password_hash: hashPassword(password),
     };
-
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .insert(createPayload)
@@ -133,9 +134,9 @@ export const ustazService = {
         };
       }
 
-      const hashedInputPassword = hashPassword(payload.password);
+      const isMatch = bcrypt.compareSync(payload.password, data.password_hash);
       
-      if (data.password_hash !== hashedInputPassword) {
+      if (!isMatch) {
         return {
           user: {} as UstazModel,
           success: false,
