@@ -4,13 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/authContext";
 
-// Mobile Bottom Nav Links (Now the primary navigation)
-const navItems = [
-  { name: "Classes", path: "/", icon: "calendar_today" }, // Path changed to "/" to match your page.tsx
-  { name: "History", path: "/history", icon: "history" },
-  { name: "Profile", path: "/profile", icon: "person" },
-];
-
 export default function DashboardLayout({
   children,
 }: {
@@ -43,30 +36,7 @@ export default function DashboardLayout({
       </main>
 
       {/* BOTTOM NAV BAR */}
-      <nav className="bg-surface-container-lowest rounded-t-xl shadow-[0_-4px_15px_rgba(0,0,0,0.04)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter py-sm pb-safe">
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link
-              key={item.name}
-              href={item.path}
-              className={`flex flex-col items-center justify-center px-5 py-1 transition-transform duration-200 group ${
-                isActive
-                  ? "bg-secondary-container text-on-secondary-container rounded-full scale-95"
-                  : "text-on-surface-variant hover:text-primary"
-              }`}
-            >
-              <span
-                className="material-symbols-outlined group-hover:text-primary"
-                style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
-              >
-                {item.icon}
-              </span>
-              <span className="font-label-caps text-label-caps mt-1">{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
+    
 
     </div>
   );

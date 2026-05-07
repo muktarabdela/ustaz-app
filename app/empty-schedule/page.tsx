@@ -7,7 +7,7 @@ export default function EmptySchedulePage() {
       {/* Welcome Header Area (Desktop only - Mobile uses the TopAppBar) */}
       <div className="hidden md:block mb-xl mt-2">
         <h1 className="font-h1 text-h1 text-on-surface">
-          Assalamu Alaikum, Ustaz Ahmed
+          አሰላሙ አለይኩም, Ustaz Ahmed
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant mt-xs">
           Here is your schedule for today.

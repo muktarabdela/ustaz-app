@@ -55,7 +55,7 @@ export default function LoginPage() {
           </span>
         </div>
         <h1 className="font-h1 text-h1 text-on-surface text-center mb-xl">
-          nurel islam ustaz
+          ኑረል ኢስላም ለ ኡስታዞች
         </h1>
 
         {/* Error Message */}
@@ -71,7 +71,7 @@ export default function LoginPage() {
           {/* Phone Input */}
           <div className="flex flex-col gap-xs">
             <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="phone">
-              Phone Number
+              ስልክ
             </label>
             <div className="relative flex items-center">
               <span className="material-symbols-outlined absolute left-md text-on-surface-variant">
@@ -93,7 +93,7 @@ export default function LoginPage() {
           {/* Password Input */}
           <div className="flex flex-col gap-xs">
             <label className="font-label-caps text-label-caps text-on-surface-variant" htmlFor="password">
-              Password
+              ፓስዎርድ
             </label>
             <div className="relative flex items-center">
               <span className="material-symbols-outlined absolute left-md text-on-surface-variant">
@@ -131,7 +131,7 @@ export default function LoginPage() {
             {isLoading ? (
               <span className="material-symbols-outlined animate-spin">refresh</span>
             ) : (
-              "Login"
+              "ይግቡ"
             )}
           </button>
 

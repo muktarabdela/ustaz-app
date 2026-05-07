@@ -98,7 +98,7 @@ export default function UstazDashboard() {
       <section className="mb-xl" aria-label="Welcome Section">
         <div className="bg-gradient-to-r from-primary/8 to-tertiary/8 rounded-2xl p-6 mb-6 border border-surface-container-low">
           <h1 className="font-h1 text-h1 text-on-surface mb-2">
-            Assalamu Alaikum, {user?.full_name || 'Ustaz'}
+            አሰላሙ አለይኩም, {user?.full_name || 'Ustaz'}
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
             {ethiopianDate ? `${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
@@ -108,25 +108,16 @@ export default function UstazDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-surface-container-low rounded-xl p-4 text-center border border-surface-container">
-            <span className="material-symbols-outlined text-2xl text-primary mb-2">calendar_today</span>
-            <p className="font-label-caps text-label-caps text-on-surface-variant">Total Classes</p>
-            <p className="font-h2 text-h2 text-on-surface">{ustazClasses.length}</p>
-          </div>
-          <div className="bg-surface-container-low rounded-xl p-4 text-center border border-surface-container">
             <span className="material-symbols-outlined text-2xl text-tertiary mb-2">groups</span>
-            <p className="font-label-caps text-label-caps text-on-surface-variant">Total Students</p>
+            <p className="font-label-caps text-label-caps text-on-surface-variant">አጠቃላይ ተማሪ ብዛት</p>
             <p className="font-h2 text-h2 text-on-surface">{Object.values(studentCounts).reduce((a, b) => a + b, 0)}</p>
           </div>
           <div className="bg-surface-container-low rounded-xl p-4 text-center border border-surface-container">
             <span className="material-symbols-outlined text-2xl text-secondary mb-2">schedule</span>
-            <p className="font-label-caps text-label-caps text-on-surface-variant">Today</p>
+          <p className="font-label-caps text-label-caps text-on-surface-variant">ዛሬ ቀን</p>
             <p className="font-h2 text-h2 text-on-surface">{ethiopianDate?.weekday || '...'}</p>
           </div>
-          <div className="bg-surface-container-low rounded-xl p-4 text-center border border-surface-container">
-            <span className="material-symbols-outlined text-2xl text-primary mb-2">trending_up</span>
-            <p className="font-label-caps text-label-caps text-on-surface-variant">Active</p>
-            <p className="font-h2 text-h2 text-on-surface">{ustazClasses.filter(c => c.classes?.schedule).length}</p>
-          </div>
+
         </div>
       </section>
 
@@ -134,7 +125,7 @@ export default function UstazDashboard() {
       <section aria-label="Your Classes">
         <h2 className="font-h2 text-h2 text-on-surface mb-lg flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">menu_book</span>
-          Your Classes
+          የዕርሶ ክፍሎች
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
@@ -163,13 +154,8 @@ export default function UstazDashboard() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span className="bg-secondary-container text-on-secondary-container font-label-caps text-label-caps px-3 py-1 rounded-full shadow-sm">
-                        {studentCounts[classUstaz.class_id] || 0} Students
+                        {studentCounts[classUstaz.class_id] || 0} ተማሪዎች
                       </span>
-                      {classUstaz.classes?.schedule && (
-                        <span className="bg-surface-container text-on-surface-variant font-label-caps text-label-caps px-2 py-1 rounded-full text-xs">
-                          Active
-                        </span>
-                      )}
                     </div>
                   </div>
                   
@@ -196,7 +182,7 @@ export default function UstazDashboard() {
                   >
                     <button className="w-full bg-primary text-on-primary font-button text-button h-12 rounded-lg hover:bg-surface-tint active:scale-95 transition-all duration-200 shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md">
                       <span className="material-symbols-outlined text-sm">checklist</span>
-                      Take Attendance
+                      አቴንዳስ ይመዝግቡ
                     </button>
                   </Link>
                 </div>

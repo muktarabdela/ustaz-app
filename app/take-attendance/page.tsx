@@ -187,7 +187,7 @@ export default function TakeAttendancePage() {
           </span>
         </Link>
         <h1 className="font-h2 text-h2 text-primary">
-          {selectedClass?.name || 'Loading...'} ({students.length} Students)
+          {selectedClass?.name || 'Loading...'} ({students.length} ተማሪዎች)
         </h1>
         <button className="flex items-center justify-center p-sm rounded-full hover:bg-surface-container-low text-on-surface-variant transition-opacity duration-150">
           <span aria-hidden="true" className="material-symbols-outlined">
@@ -203,9 +203,9 @@ export default function TakeAttendancePage() {
         <div className="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-h1 text-h1 text-on-surface">Take Attendance</h2>
+              <h2 className="font-h1 text-h1 text-on-surface">አቴንዳስ ይመዝግቡ</h2>
               <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-                {ethiopianDate ? `Record attendance for ${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
+                {ethiopianDate ? `ለ ቀን ${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
               </p>
             </div>
             <div className="bg-primary-container text-on-primary-container px-sm py-xs rounded-full flex items-center gap-xs">
@@ -213,7 +213,7 @@ export default function TakeAttendancePage() {
                 group
               </span>
               <span className="font-label-caps text-label-caps">
-                {markedCount}/{students.length} Done
+                {markedCount}/{students.length} ተጠናቋል
               </span>
             </div>
           </div>
@@ -273,17 +273,16 @@ export default function TakeAttendancePage() {
 
         {/* Student Roster (Paginated) */}
         <div className="flex flex-col gap-md mt-sm">
-          {paginatedStudents.map((student) => (
+          {paginatedStudents.map((student, index) => (
             <div
               key={student.id}
               className="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-sm"
             >
               <div className="flex items-center gap-sm mb-xs">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-button text-button shrink-0 ${student.avatarColor}`}
-                >
-                  {student.initials}
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-button text-on-primary text-sm shrink-0">
+                  {startIndex + index + 1}
                 </div>
+               
                 <div className="flex-grow">
                   <h3 className="font-button text-button text-on-surface">
                     {student.full_name}
@@ -307,7 +306,7 @@ export default function TakeAttendancePage() {
                   >
                     check_circle
                   </span>
-                  <span className="font-label-caps text-label-caps">Present</span>
+                  <span className="font-label-caps text-label-caps">አለ</span>
                 </button>
 
                 {/* Late Button */}
@@ -325,7 +324,7 @@ export default function TakeAttendancePage() {
                   >
                     schedule
                   </span>
-                  <span className="font-label-caps text-label-caps">Late</span>
+                  <span className="font-label-caps text-label-caps">አርፍዷል</span>
                 </button>
 
                 {/* Absent Button */}
@@ -343,7 +342,7 @@ export default function TakeAttendancePage() {
                   >
                     cancel
                   </span>
-                  <span className="font-label-caps text-label-caps">Absent</span>
+                  <span className="font-label-caps text-label-caps">አልመጣም</span>
                 </button>
               </div>
             </div>
@@ -397,7 +396,7 @@ export default function TakeAttendancePage() {
             <span className="material-symbols-outlined">
               {saving ? 'hourglass_empty' : 'save'}
             </span>
-            {saving ? 'Saving...' : `Save Attendance (${markedCount}/${students.length})`}
+            {saving ? 'እያስቀመጠ ነው...' : `አቴንዳሱን ያስቀምጡ (${markedCount}/${students.length})`}
           </button>
         </div>
       </div>
