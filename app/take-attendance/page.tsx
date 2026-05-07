@@ -32,6 +32,7 @@ export default function TakeAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
 
   // Pagination Logic
   const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
@@ -69,6 +70,10 @@ export default function TakeAttendancePage() {
           
           // Get today's attendance for these students
           const todayAttendance = await attendanceService.getByDate(selectedDate, firstClass.id);
+          
+          // Check if we have existing attendance (update mode)
+          const hasExistingAttendance = todayAttendance.length > 0;
+          setIsUpdateMode(hasExistingAttendance);
           
           // Transform students with attendance data
           const studentsWithAttendance: StudentWithAttendance[] = studentsData.map((student, index) => {
@@ -125,8 +130,11 @@ export default function TakeAttendancePage() {
   }, [selectedDate]);
 
   // Save attendance
-  const saveAttendance = async () => {
-    if (!selectedClass || !user?.id) return;
+  const saveAttendance = async (): Promise<boolean> => {
+    if (!selectedClass || !user?.id) {
+      alert('እባክዎ መጀመሪያ ክፍል ይምረጡ');
+      return false;
+    }
     
     try {
       setSaving(true);
@@ -141,12 +149,21 @@ export default function TakeAttendancePage() {
           recorded_by: user.id
         }));
       
-      if (attendanceRecords.length > 0) {
-        await attendanceService.upsertBulk(attendanceRecords);
-        await refreshData();
+      if (attendanceRecords.length === 0) {
+        alert('እባክዎ ቢያንድ ተማማሪ አቴንዳስ ይምልክቱ');
+        return false;
       }
+      
+      console.log('Saving attendance records:', attendanceRecords);
+      await attendanceService.upsertBulk(attendanceRecords);
+      await refreshData();
+      console.log('Attendance saved successfully!');
+      return true;
+      
     } catch (error) {
       console.error('Error saving attendance:', error);
+      alert(`አቴንዳሱን ማስቀመጥ አልተቻለም: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -203,9 +220,11 @@ export default function TakeAttendancePage() {
         <div className="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-h1 text-h1 text-on-surface">አቴንዳስ ይመዝግቡ</h2>
+              <h2 className="font-h1 text-h1 text-on-surface">
+                {isUpdateMode ? 'አቴንዳሱን ያሻሽሉ' : 'አቴንዳስ ይመዝግቡ'}
+              </h2>
               <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-                {ethiopianDate ? `ለ ቀን ${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
+                {isUpdateMode ? 'የተመዘገበ አቴንዳስ አለ። እንደገና መዝግብ ይችላሉ።' : 'አዲስ አቴንዳስ ይመዝግቡ'} • {ethiopianDate ? `ለ ቀን ${ethiopianDate.weekday}, ${ethiopianDate.month} ${ethiopianDate.day}, ${ethiopianDate.year}` : 'Loading...'}
               </p>
             </div>
             <div className="bg-primary-container text-on-primary-container px-sm py-xs rounded-full flex items-center gap-xs">
@@ -387,8 +406,10 @@ export default function TakeAttendancePage() {
         <div className="w-full max-w-3xl">
           <button 
             onClick={async () => {
-              await saveAttendance();
-              window.location.href = '/success';
+              const success = await saveAttendance();
+              if (success) {
+                window.location.href = '/success';
+              }
             }}
             disabled={saving || loading || markedCount === 0}
             className="w-full h-[48px] bg-primary text-on-primary font-button text-button rounded-lg flex items-center justify-center gap-sm transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -396,7 +417,7 @@ export default function TakeAttendancePage() {
             <span className="material-symbols-outlined">
               {saving ? 'hourglass_empty' : 'save'}
             </span>
-            {saving ? 'እያስቀመጠ ነው...' : `አቴንዳሱን ያስቀምጡ (${markedCount}/${students.length})`}
+            {saving ? 'እያስቀመጠ ነው...' : `${isUpdateMode ? 'አቴንዳሱን ያሻሽሉ' : 'አቴንዳሱን ያስቀምጡ'} (${markedCount}/${students.length})`}
           </button>
         </div>
       </div>

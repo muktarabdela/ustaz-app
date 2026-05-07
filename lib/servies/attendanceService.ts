@@ -18,7 +18,9 @@ const convertToEthiopianDate = (gregorianDate: string) => {
 };
 
 // Define a type for attendance creation without Ethiopian fields (they'll be added automatically)
-type AttendanceCreatePayload = Omit<AttendanceModel, 'id' | 'created_at' | 'ethiopian_date' | 'ethiopian_day' | 'ethiopian_month' | 'ethiopian_year'>;
+type AttendanceCreatePayload = Omit<AttendanceModel, 'id' | 'created_at' | 'ethiopian_date' | 'ethiopian_day' | 'ethiopian_month' | 'ethiopian_year'> & {
+  date: string; // Explicitly include date field
+};
 
 export const attendanceService = {
   async create(payload: AttendanceCreatePayload): Promise<AttendanceModel> {
@@ -66,5 +68,17 @@ export const attendanceService = {
 
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  async checkAttendanceExists(date: string, classId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('id')
+      .eq('date', date)
+      .eq('class_id', classId)
+      .limit(1);
+
+    if (error) throw new Error(error.message);
+    return data && data.length > 0;
   }
 };

@@ -21,17 +21,13 @@ export default function SuccessPage() {
 
         {/* Headline & Message */}
         <h1 className="font-h1 text-h1 text-on-surface mb-sm">
-          Attendance saved successfully
+           የ ዛሬ አቴዳንስ በተሳካ ሁኔታ ተቀምጧል።
         </h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant mb-xl">
-          Alhamdulillah, the attendance records have been securely stored.
-        </p>
-
         {/* Actions */}
         <div className="flex flex-col gap-sm">
           <Link href="/">
             <button className="w-full h-12 bg-surface-container-high hover:bg-surface-dim text-on-surface font-button text-button rounded-full flex items-center justify-center transition-colors">
-              Back to Class List
+              ወደ ዋና ገጽ ተመለስ
             </button>
           </Link>
         </div>

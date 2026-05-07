@@ -7,6 +7,7 @@ import { useAuth } from "@/context/authContext";
 import { useData } from "@/context/dataContext";
 import { useEffect, useState } from "react";
 import { studentService } from "@/lib/servies/studentService";
+import { attendanceService } from "@/lib/servies/attendanceService";
 import { toEthiopian } from "ethiopian-calendar-new";
 
 export default function UstazDashboard() {
@@ -14,6 +15,7 @@ export default function UstazDashboard() {
   const { ustazClasses, loading, getUstazClasses } = useData();
   const [studentCounts, setStudentCounts] = useState<{ [key: string]: number }>({});
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
+  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     if (user?.id) {
@@ -65,6 +67,29 @@ export default function UstazDashboard() {
 
     if (ustazClasses.length > 0) {
       fetchStudentCounts();
+    }
+  }, [ustazClasses]);
+
+  useEffect(() => {
+    const checkAttendanceStatus = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const status: { [key: string]: boolean } = {};
+      
+      for (const classUstaz of ustazClasses) {
+        try {
+          const exists = await attendanceService.checkAttendanceExists(today, classUstaz.class_id);
+          status[classUstaz.class_id] = exists;
+        } catch (error) {
+          console.error('Error checking attendance status:', error);
+          status[classUstaz.class_id] = false;
+        }
+      }
+      
+      setAttendanceStatus(status);
+    };
+
+    if (ustazClasses.length > 0) {
+      checkAttendanceStatus();
     }
   }, [ustazClasses]);
 
@@ -175,14 +200,24 @@ export default function UstazDashboard() {
                 </div>
                 
                 <div className="px-lg pb-lg">
+                  {attendanceStatus[classUstaz.class_id] && (
+                    <div className="mb-3 p-3 bg-tertiary-container/20 border border-tertiary/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-tertiary">
+                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                        <p className="font-body-sm text-body-sm">የዛሬ አቴንዳስ ተመዝግቧል</p>
+                      </div>
+                    </div>
+                  )}
                   <Link 
                     href={`/take-attendance?classId=${classUstaz.class_id}`} 
                     className="w-full block"
-                    aria-label={`Take attendance for ${classUstaz.classes?.name || 'Class'}`}
+                    aria-label={`${attendanceStatus[classUstaz.class_id] ? 'Update' : 'Take'} attendance for ${classUstaz.classes?.name || 'Class'}`}
                   >
-                    <button className="w-full bg-primary text-on-primary font-button text-button h-12 rounded-lg hover:bg-surface-tint active:scale-95 transition-all duration-200 shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md">
-                      <span className="material-symbols-outlined text-sm">checklist</span>
-                      አቴንዳስ ይመዝግቡ
+                    <button className={`w-full ${attendanceStatus[classUstaz.class_id] ? 'bg-tertiary text-on-tertiary' : 'bg-primary text-on-primary'} font-button text-button h-12 rounded-lg hover:bg-surface-tint active:scale-95 transition-all duration-200 shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md`}>
+                      <span className="material-symbols-outlined text-sm">
+                        {attendanceStatus[classUstaz.class_id] ? 'edit' : 'checklist'}
+                      </span>
+                      {attendanceStatus[classUstaz.class_id] ? 'አቴንዳሱን ያሻሽሉ' : 'አቴንዳስ ይመዝግቡ'}
                     </button>
                   </Link>
                 </div>
