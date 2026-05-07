@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+
+// Disable static generation for this page since it uses client-side hooks
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/authContext";
@@ -21,7 +24,7 @@ interface StudentWithAttendance extends StudentModel {
   avatarColor: string;
 }
 
-export default function TakeAttendancePage() {
+function TakeAttendancePageContent() {
   const { user } = useAuth();
   const { refreshData } = useData();
   const searchParams = useSearchParams();
@@ -422,5 +425,25 @@ export default function TakeAttendancePage() {
       </div>
 
     </div>
+  );
+}
+
+// Default export with Suspense boundary
+export default function TakeAttendancePage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined text-6xl text-primary animate-spin">
+            hourglass_empty
+          </span>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Loading...
+          </p>
+        </div>
+      </div>
+    }>
+      <TakeAttendancePageContent />
+    </Suspense>
   );
 }
