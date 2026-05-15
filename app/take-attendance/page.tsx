@@ -38,11 +38,22 @@ function TakeAttendancePageContent() {
   const [saving, setSaving] = useState(false);
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter students based on search query
+  const filteredStudents = students.filter(student =>
+    student.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Pagination Logic
-  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedStudents = students.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedStudents = filteredStudents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Function to handle clicking attendance buttons
   const updateStatus = (id: string, newStatus: AttendanceStatus) => {
@@ -280,6 +291,26 @@ function TakeAttendancePageContent() {
               )}
             </div>
             
+            <div className="flex-1 flex items-center bg-surface-container-low rounded-lg p-sm border border-surface-variant focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-on-surface-variant mr-sm">
+                search
+              </span>
+              <input
+                className="bg-transparent border-none focus:ring-0 w-full font-button text-button text-on-surface p-0 outline-none"
+                type="text"
+                placeholder="ተማሪ ፈልግ..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="ml-auto text-on-surface-variant hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              )}
+            </div>
 
           </div>
         </div>
