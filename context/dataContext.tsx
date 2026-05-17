@@ -8,6 +8,7 @@ import { AttendanceModel } from '@/models/Attendance';
 import { UstazModel } from '@/models/Ustaz';
 import { ClassModel } from '@/models/Class';
 import { BehaviorNoteModel } from '@/models/BehaviorNote';
+import { UstazAttendance } from '@/models/UstazAttendance';
 
 // Services
 import { studentService } from '@/lib/servies/studentService';
@@ -16,6 +17,7 @@ import { ustazService } from '@/lib/servies/ustazService';
 import { classService } from '@/lib/servies/classService';
 import { behaviorNoteService } from '@/lib/servies/behaviorNoteService';
 import { classUstazService } from '@/lib/servies/classUstazService';
+import { ustazAttendanceService } from '@/lib/servies/ustazAttendanceService';
 
 type DataContextType = {
   students: StudentModel[];
@@ -24,12 +26,14 @@ type DataContextType = {
   classes: ClassModel[];
   behaviorNotes: BehaviorNoteModel[];
   ustazClasses: any[]; // Will contain class_ustaz with classes data
+  ustazAttendance: UstazAttendance[];
 
   loading: boolean;
   error: string | null;
 
   refreshData: () => Promise<void>;
   getUstazClasses: (ustazId: string) => Promise<void>;
+  getUstazAttendance: (ustazId: string) => Promise<void>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -41,6 +45,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<ClassModel[]>([]);
   const [behaviorNotes, setBehaviorNotes] = useState<BehaviorNoteModel[]>([]);
   const [ustazClasses, setUstazClasses] = useState<any[]>([]);
+  const [ustazAttendance, setUstazAttendance] = useState<UstazAttendance[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +57,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Error fetching ustaz classes:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch ustaz classes');
+    }
+  };
+
+  const getUstazAttendance = async (ustazId: string) => {
+    try {
+      const ustazAttendanceData = await ustazAttendanceService.getByUstaz(ustazId);
+      setUstazAttendance(ustazAttendanceData);
+    } catch (err) {
+      console.error('Error fetching ustaz attendance:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch ustaz attendance');
     }
   };
 
@@ -104,10 +119,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     classes,
     behaviorNotes,
     ustazClasses,
+    ustazAttendance,
     loading,
     error,
     refreshData: fetchAllData,
     getUstazClasses,
+    getUstazAttendance,
   };
 
   return (

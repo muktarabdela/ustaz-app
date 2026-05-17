@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { studentService } from "@/lib/servies/studentService";
 import { attendanceService } from "@/lib/servies/attendanceService";
 import { toEthiopian } from "ethiopian-calendar-new";
+import UstazCheckIn from "@/components/UstazCheckIn";
 
 export default function UstazDashboard() {
   const { user } = useAuth();
@@ -119,6 +120,7 @@ export default function UstazDashboard() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
+
       {/* Dashboard Header */}
       <section className="mb-xl" aria-label="Welcome Section">
         <div className="bg-gradient-to-r from-primary/8 to-tertiary/8 rounded-2xl p-6 mb-6 border border-surface-container-low">
@@ -146,8 +148,14 @@ export default function UstazDashboard() {
         </div>
       </section>
 
+      {/* Check-in Section */}
+      {/* <section aria-label="Check-in" className="mb-xl">
+        <UstazCheckIn />
+      </section> */}
+
       {/* Classes Grid */}
       <section aria-label="Your Classes">
+        {/* <LocationPermission /> */}
         <h2 className="font-h2 text-h2 text-on-surface mb-lg flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">menu_book</span>
           የዕርሶ ክፍሎች

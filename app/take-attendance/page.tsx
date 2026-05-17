@@ -143,6 +143,24 @@ function TakeAttendancePageContent() {
     });
   }, [selectedDate]);
 
+  // Prevent accidental page refresh/exit when there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const markedCount = students.filter((s) => s.status !== null).length;
+      if (markedCount > 0) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+        return ''; // For other browsers
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [students]);
+
   // Save attendance
   const saveAttendance = async (): Promise<boolean> => {
     if (!selectedClass || !user?.id) {
