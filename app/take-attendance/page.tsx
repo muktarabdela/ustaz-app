@@ -39,6 +39,7 @@ function TakeAttendancePageContent() {
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Filter students based on search query
   const filteredStudents = students.filter(student =>
@@ -459,7 +460,7 @@ function TakeAttendancePageContent() {
             onClick={async () => {
               const success = await saveAttendance();
               if (success) {
-                window.location.href = '/success';
+                setShowSuccessModal(true);
               }
             }}
             disabled={saving || loading || markedCount === 0}
@@ -472,6 +473,41 @@ function TakeAttendancePageContent() {
           </button>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-container-padding">
+          <div className="bg-surface-container-lowest rounded-xl p-md max-w-[400px] w-full text-center">
+            {/* Success Icon */}
+            <div className="mb-lg flex justify-center">
+              <div className="w-24 h-24 bg-primary-container rounded-full flex items-center justify-center ambient-shadow">
+                <span 
+                  className="material-symbols-outlined text-[48px] text-on-primary-container" 
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  check_circle
+                </span>
+              </div>
+            </div>
+
+            {/* Headline & Message */}
+            <h1 className="font-h1 text-h1 text-on-surface mb-sm">
+               የ ዛሬ አቴዳንስ በተሳካ ሁኔታ ተቀምጧል።
+            </h1>
+            {/* Actions */}
+            <div className="flex flex-col gap-sm">
+              <Link
+                href="/"
+                onClick={() => setShowSuccessModal(false)}
+              >
+                <button className="w-full h-12 bg-primary text-on-primary font-button text-button rounded-full flex items-center justify-center transition-colors">
+                  ወደ ዋና ገጽ ተመለስ
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
