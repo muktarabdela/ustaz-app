@@ -9,6 +9,8 @@ import { UstazModel } from '@/models/Ustaz';
 import { ClassModel } from '@/models/Class';
 import { BehaviorNoteModel } from '@/models/BehaviorNote';
 import { UstazAttendance } from '@/models/UstazAttendance';
+import { AssessmentModel } from '@/models/Assessment';
+import { StudentMarkModel } from '@/models/StudentMark';
 
 // Services
 import { studentService } from '@/lib/servies/studentService';
@@ -18,6 +20,8 @@ import { classService } from '@/lib/servies/classService';
 import { behaviorNoteService } from '@/lib/servies/behaviorNoteService';
 import { classUstazService } from '@/lib/servies/classUstazService';
 import { ustazAttendanceService } from '@/lib/servies/ustazAttendanceService';
+import { assessmentService } from '@/lib/servies/assessmentService';
+import { studentMarkService } from '@/lib/servies/studentMarkService';
 
 type DataContextType = {
   students: StudentModel[];
@@ -27,6 +31,8 @@ type DataContextType = {
   behaviorNotes: BehaviorNoteModel[];
   ustazClasses: any[]; // Will contain class_ustaz with classes data
   ustazAttendance: UstazAttendance[];
+  assessments: AssessmentModel[];
+  studentMarks: StudentMarkModel[];
 
   loading: boolean;
   error: string | null;
@@ -46,6 +52,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [behaviorNotes, setBehaviorNotes] = useState<BehaviorNoteModel[]>([]);
   const [ustazClasses, setUstazClasses] = useState<any[]>([]);
   const [ustazAttendance, setUstazAttendance] = useState<UstazAttendance[]>([]);
+  const [assessments, setAssessments] = useState<AssessmentModel[]>([]);
+  const [studentMarks, setStudentMarks] = useState<StudentMarkModel[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,20 +87,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
         studentsData,
         ustazData,
         classesData,
-        behaviorNotesData
+        behaviorNotesData,
+        assessmentsData
       ] = await Promise.all([
         studentService.getAll(),
         ustazService.getAll(),
         classService.getAll(),
         // NOTE: Behavior notes can be heavy → optional
         // You can remove this if not needed globally
-        behaviorNoteService.getAll()
+        behaviorNoteService.getAll(),
+        assessmentService.getPublished()
       ]);
 
       setStudents(studentsData);
       setUstaz(ustazData);
       setClasses(classesData);
       setBehaviorNotes(behaviorNotesData);
+      setAssessments(assessmentsData);
 
       // Attendance → load separately (better performance)
       const today = new Date().toISOString().split('T')[0];
@@ -120,6 +131,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     behaviorNotes,
     ustazClasses,
     ustazAttendance,
+    assessments,
+    studentMarks,
     loading,
     error,
     refreshData: fetchAllData,

@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 // Disable static generation for this page since it uses client-side hooks
 export const dynamic = 'force-dynamic';
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/authContext";
 import { useData } from "@/context/dataContext";
 import { studentService } from "@/lib/servies/studentService";
