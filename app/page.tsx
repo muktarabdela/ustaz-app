@@ -289,6 +289,11 @@ export default function UstazDashboard() {
                               {classUstaz.classes?.schedule || 'Schedule TBD'}
                             </p>
                           </div>
+                          {classUstaz.classes?.description && (
+                            <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">
+                              {classUstaz.classes.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
