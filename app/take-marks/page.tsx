@@ -12,6 +12,8 @@ import { AssessmentListCard } from "@/components/AssessmentListCard";
 import { Pagination } from "@/components/Pagination";
 import { SuccessModal } from "@/components/SuccessModal";
 import { countMarkedStudents, calculateProgress } from "@/lib/utils/studentHelpers";
+import { studentMarkService } from "@/lib/servies/studentMarkService";
+import { useEffect, useState } from "react";
 
 function TakeMarksPageContent() {
   const { assessments } = useData();
@@ -39,6 +41,31 @@ function TakeMarksPageContent() {
     saveMarks,
     classId,
   } = useMarksData();
+
+  const [marksStatus, setMarksStatus] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    const checkMarksStatus = async () => {
+      const classAssessments = assessments.filter(a => a.class_id === classId);
+      const status: { [key: string]: boolean } = {};
+      
+      for (const assessment of classAssessments) {
+        try {
+          const exists = await studentMarkService.checkMarksExists(assessment.id);
+          status[assessment.id] = exists;
+        } catch (error) {
+          console.error('Error checking marks status:', error);
+          status[assessment.id] = false;
+        }
+      }
+      
+      setMarksStatus(status);
+    };
+
+    if (classId && assessments.length > 0) {
+      checkMarksStatus();
+    }
+  }, [classId, assessments]);
 
   // Calculate overall progress
   const markedCount = countMarkedStudents(students);
@@ -102,6 +129,7 @@ function TakeMarksPageContent() {
                 key={assessment.id}
                 assessment={assessment}
                 classId={classId}
+                marksStatus={marksStatus[assessment.id]}
               />
             ))
           )}

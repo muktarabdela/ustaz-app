@@ -4,9 +4,10 @@ import Link from 'next/link';
 interface AssessmentListCardProps {
   assessment: AssessmentModel;
   classId: string;
+  marksStatus?: boolean;
 }
 
-export function AssessmentListCard({ assessment, classId }: AssessmentListCardProps) {
+export function AssessmentListCard({ assessment, classId, marksStatus }: AssessmentListCardProps) {
   return (
     <Link
       href={`/take-marks?classId=${classId}&assessmentId=${assessment.id}`}
@@ -25,6 +26,14 @@ export function AssessmentListCard({ assessment, classId }: AssessmentListCardPr
           chevron_right
         </span>
       </div>
+      {marksStatus && (
+        <div className="mt-sm p-3 bg-tertiary-container/20 border border-tertiary/30 rounded-lg">
+          <div className="flex items-center gap-2 text-tertiary">
+            <span className="material-symbols-outlined text-sm">check_circle</span>
+            <p className="font-body-sm text-body-sm">ነጥቦች ተመዝግበዋል</p>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

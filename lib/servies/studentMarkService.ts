@@ -89,5 +89,16 @@ export const studentMarkService = {
       .eq('id', id);
 
     if (error) throw new Error(error.message);
+  },
+
+  async checkMarksExists(assessmentId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('id')
+      .eq('assessment_id', assessmentId)
+      .limit(1);
+
+    if (error) throw new Error(error.message);
+    return (data && data.length > 0);
   }
 };

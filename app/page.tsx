@@ -299,14 +299,14 @@ export default function UstazDashboard() {
                     </div>
                     
                     <div className="px-lg pb-lg">
-                      {attendanceStatus[classUstaz.class_id] && (
+                      {/* {attendanceStatus[classUstaz.class_id] && (
                         <div className="mb-3 p-3 bg-tertiary-container/20 border border-tertiary/30 rounded-lg">
                           <div className="flex items-center gap-2 text-tertiary">
                             <span className="material-symbols-outlined text-sm">check_circle</span>
                             <p className="font-body-sm text-body-sm">የዛሬ አቴንዳስ ተመዝግቧል</p>
                           </div>
                         </div>
-                      )}
+                      )} */}
                       <div className="flex items-center justify-center gap-2 text-primary font-button text-button">
                         <span>ይመልከቱ</span>
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
