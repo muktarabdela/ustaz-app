@@ -91,6 +91,16 @@ export function useMarksData() {
         // If assessmentId is provided, load that specific assessment
         if (assessmentId) {
           const assessmentData = assessments.find((a: AssessmentModel) => a.id === assessmentId);
+          
+          // Security check: ensure the assessment belongs to the current user
+          if (assessmentData && user && assessmentData.ustaz_id !== user.id) {
+            console.error('Security violation: Attempting to access assessment not owned by user');
+            setSelectedAssessment(null);
+            setShowAssessmentList(true);
+            setLoading(false);
+            return;
+          }
+          
           setSelectedAssessment(assessmentData || null);
           setShowAssessmentList(false);
 

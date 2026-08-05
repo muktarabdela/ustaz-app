@@ -19,6 +19,9 @@ export default function UstazDashboard() {
   const [ethiopianDate, setEthiopianDate] = useState<{day: number, month: string, year: number, weekday: string} | null>(null);
   const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: boolean }>({});
   const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  
+  // Filter assessments to only show those created by the current ustaz
+  const userAssessments = user ? assessments.filter(a => a.ustaz_id === user.id) : [];
 
   useEffect(() => {
     if (user?.id) {
@@ -230,7 +233,7 @@ export default function UstazDashboard() {
                     <div className="flex items-center gap-2 text-primary">
                       <span className="material-symbols-outlined text-sm">assignment</span>
                       <p className="font-body-sm text-body-sm">
-                        {countAssessmentsByClass(assessments, selectedClass.class_id)} ፈተና አለ
+                        {countAssessmentsByClass(userAssessments, selectedClass.class_id)} ፈተና አለ
                       </p>
                     </div>
                   </div>

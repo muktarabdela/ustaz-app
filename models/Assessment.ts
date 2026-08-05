@@ -14,6 +14,7 @@ export interface AssessmentModel {
   ethiopian_date: string | null; 
   
   created_by: string; // admin_id
+  ustaz_id: string | null; // Links assessment to a specific Ustaz
   created_at: string;
   is_published: boolean; // Lets admin hide it from Ustaz until ready
 }

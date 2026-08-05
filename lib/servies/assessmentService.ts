@@ -72,6 +72,29 @@ export const assessmentService = {
     return data || [];
   },
 
+  async getByUstaz(ustazId: string): Promise<AssessmentModel[]> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('ustaz_id', ustazId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  async getByClassAndUstaz(classId: string, ustazId: string): Promise<AssessmentModel[]> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('class_id', classId)
+      .eq('ustaz_id', ustazId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from(TABLE_NAME)

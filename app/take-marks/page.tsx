@@ -13,10 +13,13 @@ import { Pagination } from "@/components/Pagination";
 import { SuccessModal } from "@/components/SuccessModal";
 import { countMarkedStudents, calculateProgress } from "@/lib/utils/studentHelpers";
 import { studentMarkService } from "@/lib/servies/studentMarkService";
+import { assessmentService } from "@/lib/servies/assessmentService";
+import { useAuth } from "@/context/authContext";
 import { useEffect, useState } from "react";
 
 function TakeMarksPageContent() {
   const { assessments } = useData();
+  const { user } = useAuth();
   const {
     students,
     paginatedStudents,
@@ -43,10 +46,21 @@ function TakeMarksPageContent() {
   } = useMarksData();
 
   const [marksStatus, setMarksStatus] = useState<{ [key: string]: boolean }>({});
+  const [filteredAssessments, setFilteredAssessments] = useState(assessments);
+
+  // Filter assessments based on current ustaz
+  useEffect(() => {
+    if (user) {
+      const userAssessments = assessments.filter(a => a.ustaz_id === user.id);
+      setFilteredAssessments(userAssessments);
+    } else {
+      setFilteredAssessments([]);
+    }
+  }, [assessments, user]);
 
   useEffect(() => {
     const checkMarksStatus = async () => {
-      const classAssessments = assessments.filter(a => a.class_id === classId);
+      const classAssessments = filteredAssessments.filter(a => a.class_id === classId);
       const status: { [key: string]: boolean } = {};
       
       for (const assessment of classAssessments) {
@@ -62,10 +76,10 @@ function TakeMarksPageContent() {
       setMarksStatus(status);
     };
 
-    if (classId && assessments.length > 0) {
+    if (classId && filteredAssessments.length > 0) {
       checkMarksStatus();
     }
-  }, [classId, assessments]);
+  }, [classId, filteredAssessments]);
 
   // Calculate overall progress
   const markedCount = countMarkedStudents(students);
@@ -94,7 +108,7 @@ function TakeMarksPageContent() {
   }
 
   if (showAssessmentList) {
-    const classAssessments = assessments.filter(a => a.class_id === classId);
+    const classAssessments = filteredAssessments.filter(a => a.class_id === classId);
     
     return (
       <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
